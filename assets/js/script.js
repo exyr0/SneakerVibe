@@ -38,3 +38,63 @@ document.addEventListener("DOMContentLoaded", () => {
     })
     .catch((err) => console.error("Error cargando navbar:", err));
 });
+
+function crearCardCategoria(href, imgSrc, altText, titulo) {
+  // Creamos el enlace principal
+  const link = document.createElement("a");
+  link.href = href;
+  link.className = "d-block text-reset";
+
+  // Card
+  const card = document.createElement("div");
+  card.className = "card card-max";
+
+  // Imagen
+  const img = document.createElement("img");
+  img.src = imgSrc;
+  img.alt = altText;
+  img.className = "card-img-top";
+
+  // Cuerpo
+  const cardBody = document.createElement("div");
+  cardBody.className = "card-body text-center";
+
+  const h3 = document.createElement("h3");
+  h3.className = "card-title mb-0";
+  h3.textContent = titulo;
+
+  // Armar estructura
+  cardBody.appendChild(h3);
+  card.appendChild(img);
+  card.appendChild(cardBody);
+  link.appendChild(card);
+
+  return link; // devolvemos el <a> completo
+}
+
+const contenedor = document.getElementById("card-index-1");
+const cardRopa1 = crearCardCategoria(
+  "./ropa.html",
+  "./assets/img/ropa-index.png",
+  "Ropa",
+  "Ropa"
+)
+contenedor.appendChild(cardRopa1);
+
+const contenedor2 = document.getElementById("card-index-2");
+const cardZapas = crearCardCategoria(
+  "./zapatillas.html",
+  "./assets/img/zapatillas-index.png",
+  "Zapatillas",
+  "Zapatillas"
+)
+contenedor2.appendChild(cardZapas);
+
+const contenedor3 = document.getElementById("card-index-3");
+const cardAccesorios = crearCardCategoria(
+  "./accesorios.html",
+  "./assets/img/accesorios-index.png",
+  "Accesorios",
+  "Accesorios"
+)
+contenedor3.appendChild(cardAccesorios);
