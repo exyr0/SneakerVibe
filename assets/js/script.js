@@ -299,7 +299,7 @@ function renderProductoPage() {
 
   wrap.innerHTML = `
     <div class="col-md-6 d-flex justify-content-center">
-      <img src="${prod.imgSrc}" alt="${prod.altText}" class="img-producto img-fluid" />
+      <img src="${prod.imgSrc}" alt="${prod.altText}" class="img-producto size-img-prod img-fluid" />
     </div>
     <div class="col-md-6" id="text-producto">
       <div class="compra-productos">

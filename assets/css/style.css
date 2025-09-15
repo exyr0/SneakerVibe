@@ -27,3 +27,11 @@
 a.text-reset:hover {
   text-decoration: none !important;
 }
+
+.size-img-prod{
+  height: 600px;
+}
+
+.altura{
+  height: 100%;
+}
