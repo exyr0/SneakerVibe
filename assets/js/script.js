@@ -176,6 +176,8 @@ const productos = [
     precio: 59990,
     tallas: ["XS", "S", "M", "L", "XL"]
   }
+
+  
 ];
 
 /* =========================
