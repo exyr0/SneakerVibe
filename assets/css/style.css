@@ -51,9 +51,10 @@ a.text-reset:hover {
 
 
 body.bg-login {
-  background-image: url("../img/unnamed\ \(1\).jpg");
+  background-image: url("../img/fondo.jpg");
   background-size: cover;       
   background-position: center;   
   background-repeat: no-repeat; 
   background-attachment: fixed;  
 }
+
