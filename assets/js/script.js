@@ -444,3 +444,328 @@ document.addEventListener("DOMContentLoaded", () => {
   /* --- Render detalle si estamos en product.html --- */
   renderProductoPage();
 });
+
+/* -- Validación de formulario de ingreso -- */
+
+// assets/js/login.js
+(function () {
+  const form = document.getElementById("loginForm");
+  const alertBox = document.getElementById("loginAlert");
+
+  const emailInput = document.getElementById("loginEmail");
+  const passInput = document.getElementById("loginPass");
+
+  const emailFb = document.getElementById("emailFeedback");
+  const passFb = document.getElementById("passFeedback");
+
+  const submitBtn = document.getElementById("loginBtn");
+
+  const EMAIL_MAX = 100;
+  const allowedDomains = ["@duoc.cl", "@profesor.duoc.cl", "@gmail.com"];
+
+  function showError(input, fbEl, msg) {
+    input.classList.remove("is-valid");
+    input.classList.add("is-invalid");
+    if (fbEl) fbEl.textContent = msg || "";
+  }
+  function showOk(input, fbEl) {
+    input.classList.remove("is-invalid");
+    input.classList.add("is-valid");
+    if (fbEl) fbEl.textContent = "";
+  }
+  function clearState(input, fbEl) {
+    input.classList.remove("is-invalid", "is-valid");
+    if (fbEl) fbEl.textContent = "";
+  }
+
+  // --- Validación "en vivo" para correo: mensaje justo al llegar a 100 chars ---
+  emailInput.addEventListener("input", function () {
+    const val = emailInput.value.trim();
+
+    // Si llega a 100, mostrar error inmediatamente (aunque el atributo maxlength ya limite)
+    if (val.length >= EMAIL_MAX) {
+      showError(emailInput, emailFb, "El máximo de caracteres es 100.");
+    } else if (val.length === 0) {
+      // Sin texto: estado neutro
+      clearState(emailInput, emailFb);
+    } else {
+      // Quitamos el error de longitud mientras escribe (<100); el dominio se valida en blur
+      emailInput.classList.remove("is-invalid");
+      emailFb.textContent = "";
+    }
+    updateSubmitState();
+  });
+
+  // --- Validación al terminar de escribir (blur): dominios permitidos ---
+  emailInput.addEventListener("blur", function () {
+    const email = emailInput.value.trim();
+    if (!email) {
+      showError(emailInput, emailFb, "El correo es obligatorio.");
+      updateSubmitState();
+      return;
+    }
+
+    if (email.length >= EMAIL_MAX) {
+      showError(emailInput, emailFb, "El máximo de caracteres es 100.");
+      updateSubmitState();
+      return;
+    }
+
+    const basicFormat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    const domainOk = allowedDomains.some((d) =>
+      email.toLowerCase().endsWith(d)
+    );
+    if (!basicFormat || !domainOk) {
+      showError(
+        emailInput,
+        emailFb,
+        "Solo se permiten correos con @duoc.cl, @profesor.duoc.cl o @gmail.com."
+      );
+    } else {
+      showOk(emailInput, emailFb);
+    }
+    updateSubmitState();
+  });
+
+  // --- Validación en vivo de contraseña ---
+  passInput.addEventListener("input", function () {
+    const pass = passInput.value.trim();
+    if (!pass) {
+      clearState(passInput, passFb);
+    } else if (pass.length < 4 || pass.length > 10) {
+      showError(
+        passInput,
+        passFb,
+        "La contraseña debe tener entre 4 y 10 caracteres."
+      );
+    } else {
+      showOk(passInput, passFb);
+    }
+    updateSubmitState();
+  });
+
+  // --- Habilitar/deshabilitar botón según estado de ambos campos ---
+  function updateSubmitState() {
+    const emailOk =
+      emailInput.value.trim().length > 0 &&
+      emailInput.value.trim().length < EMAIL_MAX &&
+      !emailInput.classList.contains("is-invalid");
+
+    const pass = passInput.value.trim();
+    const passOk =
+      pass.length >= 4 &&
+      pass.length <= 10 &&
+      !passInput.classList.contains("is-invalid");
+
+    submitBtn.disabled = !(emailOk && passOk);
+  }
+  updateSubmitState();
+
+  // --- Envío del formulario ---
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    alertBox.innerHTML = "";
+
+    // Forzar validaciones finales
+    emailInput.dispatchEvent(new Event("blur"));
+    passInput.dispatchEvent(new Event("input"));
+
+    if (submitBtn.disabled) return;
+
+    try {
+      SVAuth.login(emailInput.value.trim(), passInput.value.trim());
+      SVAuth.updateNavbarAuthState();
+      window.location.href = "./index.html";
+    } catch (err) {
+      alertBox.innerHTML = `<div class="alert alert-danger" role="alert">${err.message}</div>`;
+    }
+  });
+})();
+
+/* -- validaciones de registro -- */
+// assets/js/register.js
+document.addEventListener("DOMContentLoaded", function () {
+  const form = document.getElementById("registerForm");
+  const alertBox = document.getElementById("regAlert");
+
+  const nameInput = document.getElementById("regName");
+  const emailInput = document.getElementById("regEmail");
+  const passInput = document.getElementById("regPass");
+  const pass2Input = document.getElementById("regPass2");
+
+  const nameFb = document.getElementById("nameFeedback");
+  const emailFb = document.getElementById("emailFeedback");
+  const passFb = document.getElementById("passFeedback");
+  const pass2Fb = document.getElementById("pass2Feedback");
+
+  const submitBtn =
+    document.getElementById("registerBtn") ||
+    form.querySelector('button[type="submit"]');
+
+  const EMAIL_MAX = 100;
+  const allowedDomains = ["@duoc.cl", "@profesor.duoc.cl", "@gmail.com"];
+
+  function showError(input, fbEl, msg) {
+    input.classList.remove("is-valid");
+    input.classList.add("is-invalid");
+    if (fbEl) fbEl.textContent = msg || "";
+  }
+  function showOk(input, fbEl) {
+    input.classList.remove("is-invalid");
+    input.classList.add("is-valid");
+    if (fbEl) fbEl.textContent = "";
+  }
+  function clearState(input, fbEl) {
+    input.classList.remove("is-invalid", "is-valid");
+    if (fbEl) fbEl.textContent = "";
+  }
+
+  function validateName() {
+    const val = (nameInput?.value || "").trim();
+    if (!val) {
+      showError(nameInput, nameFb, "El nombre es obligatorio.");
+      return false;
+    }
+    showOk(nameInput, nameFb);
+    return true;
+  }
+
+  // Email: error inmediato al llegar a 100; dominios al salir del campo
+  function emailInputHandler() {
+    const val = emailInput.value.trim();
+    if (val.length >= EMAIL_MAX) {
+      showError(emailInput, emailFb, "El máximo de caracteres es 100.");
+    } else if (val.length === 0) {
+      clearState(emailInput, emailFb);
+    } else {
+      emailInput.classList.remove("is-invalid");
+      if (emailFb) emailFb.textContent = "";
+    }
+    updateSubmitState();
+  }
+  function emailBlurHandler() {
+    const email = emailInput.value.trim();
+    if (!email) {
+      showError(emailInput, emailFb, "El correo es obligatorio.");
+      return updateSubmitState();
+    }
+    if (email.length >= EMAIL_MAX) {
+      showError(emailInput, emailFb, "El máximo de caracteres es 100.");
+      return updateSubmitState();
+    }
+
+    const basicFormat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    const domainOk = allowedDomains.some((d) =>
+      email.toLowerCase().endsWith(d)
+    );
+    if (!basicFormat || !domainOk) {
+      showError(
+        emailInput,
+        emailFb,
+        "Solo se permiten correos con @duoc.cl, @profesor.duoc.cl o @gmail.com."
+      );
+    } else {
+      showOk(emailInput, emailFb);
+    }
+    updateSubmitState();
+  }
+
+  function validatePass() {
+    const pass = passInput.value.trim();
+    if (!pass) {
+      clearState(passInput, passFb);
+      return false;
+    }
+    if (pass.length < 4 || pass.length > 10) {
+      showError(
+        passInput,
+        passFb,
+        "La contraseña debe tener entre 4 y 10 caracteres."
+      );
+      return false;
+    }
+    showOk(passInput, passFb);
+    return true;
+  }
+
+  function validatePass2() {
+    const p1 = passInput.value.trim();
+    const p2 = pass2Input.value.trim();
+    if (!p2) {
+      clearState(pass2Input, pass2Fb);
+      return false;
+    }
+    if (p2.length < 4 || p2.length > 10) {
+      showError(
+        pass2Input,
+        pass2Fb,
+        "La contraseña debe tener entre 4 y 10 caracteres."
+      );
+      return false;
+    }
+    if (p1 !== p2) {
+      showError(pass2Input, pass2Fb, "Las contraseñas no coinciden.");
+      return false;
+    }
+    showOk(pass2Input, pass2Fb);
+    return true;
+  }
+
+  function updateSubmitState() {
+    const ok =
+      validateName() &
+      (emailInput.value.trim().length > 0 &&
+        emailInput.value.trim().length < EMAIL_MAX &&
+        !emailInput.classList.contains("is-invalid")) &
+      validatePass() &
+      validatePass2();
+
+    if (submitBtn) submitBtn.disabled = !ok;
+  }
+
+  // Listeners
+  nameInput.addEventListener("input", function () {
+    validateName();
+    updateSubmitState();
+  });
+  emailInput.addEventListener("input", emailInputHandler);
+  emailInput.addEventListener("blur", emailBlurHandler);
+  passInput.addEventListener("input", function () {
+    validatePass();
+    validatePass2();
+    updateSubmitState();
+  });
+  pass2Input.addEventListener("input", function () {
+    validatePass2();
+    updateSubmitState();
+  });
+
+  // Estado inicial
+  updateSubmitState();
+
+  // Submit
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    alertBox.innerHTML = "";
+
+    emailBlurHandler(); // fuerza validación de dominio
+    validatePass(); // fuerza errores si corresponde
+    validatePass2();
+    validateName();
+    updateSubmitState();
+
+    if (submitBtn && submitBtn.disabled) return;
+
+    try {
+      SVAuth.registerUser({
+        nombre: nameInput.value.trim(),
+        email: emailInput.value.trim(),
+        password: passInput.value.trim(),
+      });
+      SVAuth.updateNavbarAuthState();
+      window.location.href = "./index.html";
+    } catch (err) {
+      alertBox.innerHTML = `<div class="alert alert-danger" role="alert">${err.message}</div>`;
+    }
+  });
+});
