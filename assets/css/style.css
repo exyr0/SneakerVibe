@@ -58,3 +58,7 @@ body.bg-login {
   background-attachment: fixed;  
 }
 
+/* === Mostrar errores de validación manual === */
+.form-control.is-invalid ~ .invalid-feedback {
+  display: block;
+}

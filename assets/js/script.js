@@ -450,6 +450,8 @@ document.addEventListener("DOMContentLoaded", () => {
 // assets/js/login.js
 (function () {
   const form = document.getElementById("loginForm");
+  if (!form) return; // Ejecutar solo en páginas que tengan el formulario de ingreso
+
   const alertBox = document.getElementById("loginAlert");
 
   const emailInput = document.getElementById("loginEmail");
@@ -586,6 +588,8 @@ document.addEventListener("DOMContentLoaded", () => {
 // assets/js/register.js
 document.addEventListener("DOMContentLoaded", function () {
   const form = document.getElementById("registerForm");
+  if (!form) return; // Ejecutar solo en páginas que tengan el formulario de registro
+
   const alertBox = document.getElementById("regAlert");
 
   const nameInput = document.getElementById("regName");
@@ -598,11 +602,11 @@ document.addEventListener("DOMContentLoaded", function () {
   const passFb = document.getElementById("passFeedback");
   const pass2Fb = document.getElementById("pass2Feedback");
 
-  const submitBtn =
-    document.getElementById("registerBtn") ||
-    form.querySelector('button[type="submit"]');
+  const submitBtn = document.getElementById("registerBtn");
 
   const EMAIL_MAX = 100;
+  const PASS_MIN = 4;
+  const PASS_MAX = 10;
   const allowedDomains = ["@duoc.cl", "@profesor.duoc.cl", "@gmail.com"];
 
   function showError(input, fbEl, msg) {
@@ -620,8 +624,9 @@ document.addEventListener("DOMContentLoaded", function () {
     if (fbEl) fbEl.textContent = "";
   }
 
+  // Nombre
   function validateName() {
-    const val = (nameInput?.value || "").trim();
+    const val = nameInput.value.trim();
     if (!val) {
       showError(nameInput, nameFb, "El nombre es obligatorio.");
       return false;
@@ -630,8 +635,8 @@ document.addEventListener("DOMContentLoaded", function () {
     return true;
   }
 
-  // Email: error inmediato al llegar a 100; dominios al salir del campo
-  function emailInputHandler() {
+  // Email: error al llegar a 100; dominios al blur
+  function onEmailInput() {
     const val = emailInput.value.trim();
     if (val.length >= EMAIL_MAX) {
       showError(emailInput, emailFb, "El máximo de caracteres es 100.");
@@ -643,7 +648,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     updateSubmitState();
   }
-  function emailBlurHandler() {
+  function onEmailBlur() {
     const email = emailInput.value.trim();
     if (!email) {
       showError(emailInput, emailFb, "El correo es obligatorio.");
@@ -653,7 +658,6 @@ document.addEventListener("DOMContentLoaded", function () {
       showError(emailInput, emailFb, "El máximo de caracteres es 100.");
       return updateSubmitState();
     }
-
     const basicFormat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     const domainOk = allowedDomains.some((d) =>
       email.toLowerCase().endsWith(d)
@@ -662,7 +666,7 @@ document.addEventListener("DOMContentLoaded", function () {
       showError(
         emailInput,
         emailFb,
-        "Solo se permiten correos con @duoc.cl, @profesor.duoc.cl o @gmail.com."
+        "Solo @duoc.cl, @profesor.duoc.cl o @gmail.com."
       );
     } else {
       showOk(emailInput, emailFb);
@@ -670,17 +674,18 @@ document.addEventListener("DOMContentLoaded", function () {
     updateSubmitState();
   }
 
+  // Password principal
   function validatePass() {
-    const pass = passInput.value.trim();
-    if (!pass) {
+    const v = passInput.value.trim();
+    if (!v) {
       clearState(passInput, passFb);
       return false;
     }
-    if (pass.length < 4 || pass.length > 10) {
+    if (v.length < PASS_MIN || v.length > PASS_MAX) {
       showError(
         passInput,
         passFb,
-        "La contraseña debe tener entre 4 y 10 caracteres."
+        `La contraseña debe tener entre ${PASS_MIN} y ${PASS_MAX} caracteres.`
       );
       return false;
     }
@@ -688,6 +693,7 @@ document.addEventListener("DOMContentLoaded", function () {
     return true;
   }
 
+  // Confirmación
   function validatePass2() {
     const p1 = passInput.value.trim();
     const p2 = pass2Input.value.trim();
@@ -695,11 +701,11 @@ document.addEventListener("DOMContentLoaded", function () {
       clearState(pass2Input, pass2Fb);
       return false;
     }
-    if (p2.length < 4 || p2.length > 10) {
+    if (p2.length < PASS_MIN || p2.length > PASS_MAX) {
       showError(
         pass2Input,
         pass2Fb,
-        "La contraseña debe tener entre 4 y 10 caracteres."
+        `La contraseña debe tener entre ${PASS_MIN} y ${PASS_MAX} caracteres.`
       );
       return false;
     }
@@ -711,6 +717,7 @@ document.addEventListener("DOMContentLoaded", function () {
     return true;
   }
 
+  // Habilitar / deshabilitar botón
   function updateSubmitState() {
     const ok =
       validateName() &
@@ -719,23 +726,22 @@ document.addEventListener("DOMContentLoaded", function () {
         !emailInput.classList.contains("is-invalid")) &
       validatePass() &
       validatePass2();
-
-    if (submitBtn) submitBtn.disabled = !ok;
+    submitBtn.disabled = !ok;
   }
 
-  // Listeners
-  nameInput.addEventListener("input", function () {
+  // Listeners (validación en vivo)
+  nameInput.addEventListener("input", () => {
     validateName();
     updateSubmitState();
   });
-  emailInput.addEventListener("input", emailInputHandler);
-  emailInput.addEventListener("blur", emailBlurHandler);
-  passInput.addEventListener("input", function () {
+  emailInput.addEventListener("input", onEmailInput);
+  emailInput.addEventListener("blur", onEmailBlur);
+  passInput.addEventListener("input", () => {
     validatePass();
     validatePass2();
     updateSubmitState();
   });
-  pass2Input.addEventListener("input", function () {
+  pass2Input.addEventListener("input", () => {
     validatePass2();
     updateSubmitState();
   });
@@ -748,13 +754,12 @@ document.addEventListener("DOMContentLoaded", function () {
     e.preventDefault();
     alertBox.innerHTML = "";
 
-    emailBlurHandler(); // fuerza validación de dominio
-    validatePass(); // fuerza errores si corresponde
+    onEmailBlur();
+    validatePass();
     validatePass2();
     validateName();
     updateSubmitState();
-
-    if (submitBtn && submitBtn.disabled) return;
+    if (submitBtn.disabled) return;
 
     try {
       SVAuth.registerUser({
